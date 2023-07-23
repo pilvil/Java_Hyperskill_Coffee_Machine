@@ -1,8 +1,8 @@
 package machine;
 
 public enum CoffeeOption {
-    ESPRESSO(250,0,16, 1, 4),
-    LATTE(350,75, 20, 1, 7),
+    ESPRESSO(250, 0, 16, 1, 4),
+    LATTE(350, 75, 20, 1, 7),
     CAPPUCCINO(200, 100, 12, 1, 6);
 
     private final int water;

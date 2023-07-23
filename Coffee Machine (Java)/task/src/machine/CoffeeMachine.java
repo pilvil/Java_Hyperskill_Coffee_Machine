@@ -4,82 +4,118 @@ import java.util.Scanner;
 
 public class CoffeeMachine {
 
-    public static final int WATER_DEFAULT_QTY = 400;
-    public static final int MILK_DEFAULT_QTY = 540;
-    public static final int BEANS_DEFAULT_QTY = 120;
-    public static final int CUPS_DEFAULT_QTY = 9;
-    public static final int MONEY_DEFAULT_QTY = 550;
-
     static int waterAmountAdded;
     static int milkAmountAdded;
     static int beansAmountAdded;
     static int cupsAmountAdded;
-    static int moneyAmountAdded;
 
 
     public static void main(String[] args) {
-        System.out.println("""
-                The coffee machine has:
-                400 ml of water
-                540 ml of milk
-                120 g of coffee beans
-                9 disposable cups
-                $550 of money\n""");
-
-        System.out.println("Write action (buy, fill, take): ");
-
         Scanner scanner = new Scanner(System.in);
-        String userInput = scanner.nextLine();
-        switch (userInput) {
-            case "buy":
-                int[] buyAmounts = implementBuy();
-                printresult(buyAmounts);
-                break;
-            case "fill":
-                int[] fillAmounts = implementFill();
-                printresult(fillAmounts);
-                break;
-            case "take":
-                printTakeResult();
-                break;
-        }
+        RemainingList remainingList = new RemainingList();
+        boolean run = true;
 
+        while (run) {
+            System.out.println("Write action (buy, fill, take, remaining, exit): ");
+            String userInput = scanner.nextLine();
+
+            switch (userInput) {
+                case "buy":
+                    implementBuy(scanner, remainingList);
+                    break;
+                case "fill":
+                    implementFill(scanner, remainingList);
+                    break;
+                case "take":
+                    implementTake(remainingList);
+                    break;
+                case "remaining":
+                    implementRemaining(remainingList);
+                    break;
+                case "exit":
+                    run = false;
+                    break;
+            }
+        }
     }
 
-    private static int[] implementBuy() {
-        Scanner scanner = new Scanner(System.in);
-        int[] filledAmounts = new int[5];
-        System.out.println("What do you want to buy? 1 - espresso, 2 - latte, 3 - cappuccino: ");
-        int coffeeOptionNumber = scanner.nextInt();
-        switch (coffeeOptionNumber) {
+
+    private static void implementBuy(Scanner scanner, RemainingList remainingList) {
+        System.out.println("\nWhat do you want to buy? 1 - espresso, 2 - latte, 3 - cappuccino, back - to main menu: ");
+        String coffeeOptionNumber = scanner.nextLine();
+
+        if (coffeeOptionNumber.equals("back")) {
+            return; // If the user chooses "back," simply return without making a purchase.
+        }
+
+        // Get the selected CoffeeOption based on the user's input.
+        CoffeeOption selectedOption = getCoffeeOption(coffeeOptionNumber);
+
+        if (selectedOption != null) {
+            // Check if there are enough resources to make the selected coffee.
+            if (isEnoughResources(remainingList, selectedOption)) {
+                createCoffeeOption(remainingList, coffeeOptionNumber);
+                System.out.println("I have enough resources, making you a coffee!\n");
+            } else {
+                System.out.println("Sorry, not enough resources!\n");
+            }
+        } else {
+            System.out.println("Invalid input. Please try again.\n");
+        }
+    }
+
+    private static CoffeeOption getCoffeeOption(String coffeeOptionNumber) {
+        int optionNumber = Integer.parseInt(coffeeOptionNumber);
+        switch (optionNumber) {
             case 1:
-                filledAmounts[0] = WATER_DEFAULT_QTY - CoffeeOption.ESPRESSO.getWater();
-                filledAmounts[1] = MILK_DEFAULT_QTY - CoffeeOption.ESPRESSO.getMilk();
-                filledAmounts[2] = BEANS_DEFAULT_QTY - CoffeeOption.ESPRESSO.getBeans();
-                filledAmounts[3] = CUPS_DEFAULT_QTY - CoffeeOption.ESPRESSO.getCups();
-                filledAmounts[4] = MONEY_DEFAULT_QTY + CoffeeOption.ESPRESSO.getCost();
-                break;
+                return CoffeeOption.ESPRESSO;
             case 2:
-                filledAmounts[0] = WATER_DEFAULT_QTY - CoffeeOption.LATTE.getWater();
-                filledAmounts[1] = MILK_DEFAULT_QTY - CoffeeOption.LATTE.getMilk();
-                filledAmounts[2] = BEANS_DEFAULT_QTY - CoffeeOption.LATTE.getBeans();
-                filledAmounts[3] = CUPS_DEFAULT_QTY - CoffeeOption.LATTE.getCups();
-                filledAmounts[4] = MONEY_DEFAULT_QTY + CoffeeOption.LATTE.getCost();
-                break;
+                return CoffeeOption.LATTE;
             case 3:
-                filledAmounts[0] = WATER_DEFAULT_QTY - CoffeeOption.CAPPUCCINO.getWater();
-                filledAmounts[1] = MILK_DEFAULT_QTY - CoffeeOption.CAPPUCCINO.getMilk();
-                filledAmounts[2] = BEANS_DEFAULT_QTY - CoffeeOption.CAPPUCCINO.getBeans();
-                filledAmounts[3] = CUPS_DEFAULT_QTY - CoffeeOption.CAPPUCCINO.getCups();
-                filledAmounts[4] = MONEY_DEFAULT_QTY + CoffeeOption.CAPPUCCINO.getCost();
-                break;
+                return CoffeeOption.CAPPUCCINO;
+            default:
+                return null;
         }
-        return filledAmounts;
     }
 
-    private static int[] implementFill() {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Write how many ml of water you want to add:");
+    private static boolean isEnoughResources(RemainingList remainingList, CoffeeOption coffeeOption) {
+        return remainingList.getWaterRemaining() >= coffeeOption.getWater() &&
+                remainingList.getMilkRemaining() >= coffeeOption.getMilk() &&
+                remainingList.getBeansRemaining() >= coffeeOption.getBeans() &&
+                remainingList.getCupsRemaining() >= coffeeOption.getCups();
+    }
+
+
+    private static void createCoffeeOption(RemainingList remainingList, String coffeeOptionNumber) {
+        switch (coffeeOptionNumber) {
+            case "1":
+                remainingList.setWaterRemaining(remainingList.getWaterRemaining() - CoffeeOption.ESPRESSO.getWater());
+                remainingList.setMilkRemaining(remainingList.getMilkRemaining() - CoffeeOption.ESPRESSO.getMilk());
+                remainingList.setBeansRemaining(remainingList.getBeansRemaining() - CoffeeOption.ESPRESSO.getBeans());
+                remainingList.setCupsRemaining(remainingList.getCupsRemaining() - CoffeeOption.ESPRESSO.getCups());
+                remainingList.setMoneyRemaining(remainingList.getMoneyRemaining() + CoffeeOption.ESPRESSO.getCost());
+                break;
+            case "2":
+                remainingList.setWaterRemaining(remainingList.getWaterRemaining() - CoffeeOption.LATTE.getWater());
+                remainingList.setMilkRemaining(remainingList.getMilkRemaining() - CoffeeOption.LATTE.getMilk());
+                remainingList.setBeansRemaining(remainingList.getBeansRemaining() - CoffeeOption.LATTE.getBeans());
+                remainingList.setCupsRemaining(remainingList.getCupsRemaining() - CoffeeOption.LATTE.getCups());
+                remainingList.setMoneyRemaining(remainingList.getMoneyRemaining() + CoffeeOption.LATTE.getCost());
+                break;
+            case "3":
+                remainingList.setWaterRemaining(remainingList.getWaterRemaining() - CoffeeOption.CAPPUCCINO.getWater());
+                remainingList.setMilkRemaining(remainingList.getMilkRemaining() - CoffeeOption.CAPPUCCINO.getMilk());
+                remainingList.setBeansRemaining(remainingList.getBeansRemaining() - CoffeeOption.CAPPUCCINO.getBeans());
+                remainingList.setCupsRemaining(remainingList.getCupsRemaining() - CoffeeOption.CAPPUCCINO.getCups());
+                remainingList.setMoneyRemaining(remainingList.getMoneyRemaining() + CoffeeOption.CAPPUCCINO.getCost());
+                break;
+            case "back":
+                break;
+        }
+    }
+
+    private static void implementFill(Scanner scanner, RemainingList remainingList) {
+        System.out.println("\nWrite how many ml of water you want to add:");
         waterAmountAdded = scanner.nextInt();
         System.out.println("Write how many ml of milk you want to add:");
         milkAmountAdded = scanner.nextInt();
@@ -87,42 +123,34 @@ public class CoffeeMachine {
         beansAmountAdded = scanner.nextInt();
         System.out.println("Write how many disposable cups you want to add:");
         cupsAmountAdded = scanner.nextInt();
-        moneyAmountAdded = 0;
+        scanner.nextLine();
+        System.out.printf("\n");
 
-        int[] calculatedFillAmounts = calculateFillAmounts(waterAmountAdded, milkAmountAdded, beansAmountAdded, cupsAmountAdded, moneyAmountAdded);
-        return calculatedFillAmounts;
+        calculateFillAmounts(waterAmountAdded, milkAmountAdded, beansAmountAdded, cupsAmountAdded, remainingList);
     }
 
-    private static int[] calculateFillAmounts(int waterAmountAdded, int milkAmountAdded, int beansAmountAdded, int cupsAmountAdded, int moneyAmountAdded) {
-        int[] filledAmounts = new int[5];
-        filledAmounts[0] = WATER_DEFAULT_QTY + waterAmountAdded;
-        filledAmounts[1] = MILK_DEFAULT_QTY + milkAmountAdded;
-        filledAmounts[2] = BEANS_DEFAULT_QTY + beansAmountAdded;
-        filledAmounts[3] = CUPS_DEFAULT_QTY + cupsAmountAdded;
-        filledAmounts[4] = MONEY_DEFAULT_QTY + moneyAmountAdded;
-        return filledAmounts;
+    private static void calculateFillAmounts(int waterAmountAdded, int milkAmountAdded, int beansAmountAdded, int cupsAmountAdded, RemainingList remainingList) {
+        remainingList.setWaterRemaining(remainingList.getWaterRemaining() + waterAmountAdded);
+        remainingList.setMilkRemaining(remainingList.getMilkRemaining() + milkAmountAdded);
+        remainingList.setBeansRemaining(remainingList.getBeansRemaining() + beansAmountAdded);
+        remainingList.setCupsRemaining(remainingList.getCupsRemaining() + cupsAmountAdded);
     }
 
-    private static void printresult(int[] printoutAmounts) {
+    private static void implementTake(RemainingList remainingList) {
+
+        System.out.println("I gave you $" + remainingList.getMoneyRemaining() + "\n");
+        remainingList.setMoneyRemaining(0);
+    }
+
+    public static void implementRemaining(RemainingList remainingList) {
+
         System.out.printf("\nThe coffee machine has:\n" +
                 "%d ml of water\n" +
                 "%d ml of milk\n" +
                 "%d g of coffee beans\n" +
                 "%d disposable cups\n" +
-                "$%d of money", printoutAmounts[0], printoutAmounts[1], printoutAmounts[2], printoutAmounts[3], printoutAmounts[4]);
+                "$%d of money\n\n", remainingList.getWaterRemaining(), remainingList.getMilkRemaining(), remainingList.getBeansRemaining(), remainingList.getCupsRemaining(), remainingList.getMoneyRemaining());
     }
-
-    private static void printTakeResult() {
-        System.out.println("I gave you $550");
-        System.out.println("");
-        System.out.println("""
-                400 ml of water
-                540 ml of milk
-                120 g of coffee beans
-                9 disposable cups
-                $0 of money""");
-    }
-
 }
 
 
